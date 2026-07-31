@@ -1,6 +1,6 @@
 # Grahita
 
-PWA monitoring proses pembuatan **POC (Palm Oil Mill Effluent Composting)** dan **Eco Enzym** untuk pertanian modern.
+PWA monitoring proses pembuatan **POC (Pupuk Organik Cair)** dan **Eco Enzym** untuk pertanian modern.
 
 ## Fitur
 
