@@ -5,6 +5,7 @@ import { createPortal } from "react-dom"
 import { WalkthroughChoice } from "./walkthrough-choice"
 import { WalkthroughCarousel } from "./walkthrough-carousel"
 import { WalkthroughCompletion } from "./walkthrough-completion"
+import { markWalkthroughComplete } from "./walkthrough-data"
 import { cn } from "@/lib/utils"
 import { X } from "lucide-react"
 
@@ -37,11 +38,10 @@ export function WalkthroughModal({ isOpen, onClose }: WalkthroughModalProps) {
   // Body scroll lock
   useEffect(() => {
     if (!isOpen) return
-    const originalClass = document.body.className
-    document.body.classList.add("overflow-hidden")
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
     return () => {
-      document.body.classList.remove("overflow-hidden")
-      if (originalClass) document.body.className = originalClass
+      document.body.style.overflow = originalOverflow
     }
   }, [isOpen])
 
@@ -59,9 +59,14 @@ export function WalkthroughModal({ isOpen, onClose }: WalkthroughModalProps) {
     setType(selected)
   }, [])
 
+  const handleSkip = useCallback(() => {
+    onClose()
+  }, [onClose])
+
   const handleComplete = useCallback(() => {
+    if (type) markWalkthroughComplete(type)
     setIsComplete(true)
-  }, [])
+  }, [type])
 
   const handleLastStep = useCallback((last: boolean) => {
     setIsLastStep(last)
@@ -82,14 +87,28 @@ export function WalkthroughModal({ isOpen, onClose }: WalkthroughModalProps) {
   const isReward = isComplete || isLastStep
 
   const bgClass = cn(
-    "fixed top-0 left-0 h-[100dvh] w-screen z-[100] flex items-center justify-center motion-safe:transition-colors motion-safe:duration-700 motion-safe:ease-out",
+    "fixed top-0 left-0 h-[100dvh] w-screen z-[100] flex items-center justify-center",
+    "motion-safe:transition-colors motion-safe:ease-out",
     isReward
-      ? "bg-[#eaf06a] dark:bg-[#143d32]"
-      : "bg-[#f5f7f0] dark:bg-[#0b1f1a]"
+      ? "bg-[#eaf06a] motion-safe:duration-500 dark:bg-[#143d32]"
+      : "bg-[#f5f7f0] motion-safe:duration-500 dark:bg-[#0b1f1a]"
   )
 
+  const radialTexture = isReward
+    ? "bg-[radial-gradient(circle_at_30%_20%,rgba(0,49,37,0.08),transparent_40%),radial-gradient(circle_at_70%_80%,rgba(255,255,255,0.25),transparent_40%)] dark:bg-[radial-gradient(circle_at_30%_20%,rgba(234,240,106,0.1),transparent_40%),radial-gradient(circle_at_70%_80%,rgba(255,255,255,0.05),transparent_40%)]"
+    : ""
+
   const modalContent = (
-    <div className={bgClass} role="dialog" aria-modal="true" aria-label="Panduan Pembuatan">
+    <div
+      className={bgClass}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Panduan Pembuatan"
+    >
+      {radialTexture && (
+        <div className={cn("absolute inset-0 pointer-events-none", radialTexture)} />
+      )}
+
       <div className="relative w-full h-full max-w-2xl mx-auto flex flex-col">
         {/* Close button — hidden during completion */}
         {!isComplete && (
@@ -110,9 +129,9 @@ export function WalkthroughModal({ isOpen, onClose }: WalkthroughModalProps) {
         {/* Main content area */}
         <div className="flex-1 flex flex-col justify-center p-4 sm:p-6">
           {isComplete ? (
-            <WalkthroughCompletion onClose={handleCloseCompletion} />
+            <WalkthroughCompletion type={type} onClose={handleCloseCompletion} />
           ) : type === null ? (
-            <WalkthroughChoice onSelect={handleSelect} />
+            <WalkthroughChoice onSelect={handleSelect} onSkip={handleSkip} />
           ) : (
             <WalkthroughCarousel
               type={type}
