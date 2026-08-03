@@ -236,7 +236,7 @@ export function WalkthroughCarousel({
           {isLastStep ? (
             <>
               <Check className="h-4 w-4" />
-              Selesai — Siap!
+              Selesai
             </>
           ) : (
             <>

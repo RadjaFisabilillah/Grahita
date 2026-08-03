@@ -130,24 +130,6 @@ export function getSteps(type: "ECO_ENZYM" | "POC") {
   return type === "ECO_ENZYM" ? ECO_ENZYM_STEPS : POC_STEPS
 }
 
-export function getWalkthroughMeta(type: "ECO_ENZYM" | "POC") {
-  return type === "ECO_ENZYM"
-    ? {
-        label: "Eco Enzym",
-        shortLabel: "Eco Enzym",
-        result: "Eco Enzym siap pakai",
-        duration: "~4 menit",
-        stepCount: ECO_ENZYM_STEPS.length,
-      }
-    : {
-        label: "POC (Pupuk Organik Cair)",
-        shortLabel: "POC",
-        result: "Pupuk organik cair matang",
-        duration: "~3 menit",
-        stepCount: POC_STEPS.length,
-      }
-}
-
 const COMPLETION_KEY = "grahita-walkthrough-completed"
 
 export function markWalkthroughComplete(type: "ECO_ENZYM" | "POC") {
