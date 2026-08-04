@@ -82,6 +82,8 @@ export default function RootLayout({
     <html lang="id" suppressHydrationWarning className={`${lexend.variable} ${libreFranklin.variable}`}>
       <head>
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
+        <link rel="icon" type="image/svg+xml" href="/icon-512x512.svg" />
+        <link rel="alternate icon" type="image/png" href="/icon-192x192.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="format-detection" content="telephone=no" />

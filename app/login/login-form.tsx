@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, Eye, EyeOff, AlertCircle, CheckCircle2, Leaf } from "lucide-react"
+import { Loader2, Eye, EyeOff, AlertCircle, CheckCircle2 } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
 import {
   Dialog,
@@ -62,7 +63,13 @@ export function LoginForm({ expired, registered, errorParam }: LoginFormProps) {
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
             <div className="h-14 w-14 rounded-2xl flex items-center justify-center overflow-hidden bg-forest">
-              <Leaf className="h-8 w-8 text-white" />
+              <Image
+                src="/icon-512x512.svg"
+                alt="Grahita"
+                width={56}
+                height={56}
+                className="h-full w-full object-cover"
+              />
             </div>
           </div>
           <CardTitle className="font-headline text-2xl">Selamat datang kembali</CardTitle>

@@ -1,18 +1,10 @@
 "use client"
 
-import { useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { WifiOff, RefreshCw, Home } from "lucide-react"
 
 export default function OfflinePage() {
-  useEffect(() => {
-    // Check if online and redirect if so
-    if (typeof window !== "undefined" && navigator.onLine) {
-      window.location.href = "/dashboard"
-    }
-  }, [])
-
   return (
     <div className="min-h-[100dvh] flex flex-col items-center justify-center px-6 text-center bg-background">
       <div className="w-24 h-24 rounded-full bg-forest/10 dark:bg-secondary/10 flex items-center justify-center mb-6">
@@ -28,7 +20,7 @@ export default function OfflinePage() {
       </p>
 
       <p className="font-body text-sm text-muted-foreground/70 mb-8 max-w-xs mx-auto">
-        Data fermentasi yang sudah pernah dibuka sebelumnya masih bisa diakses. Silakan periksa koneksi Anda dan coba lagi.
+        Data fermentasi yang sudah pernah dibuka sebelumnya masih bisa diakses. Silakan periksa koneksi Anda.
       </p>
 
       <div className="flex flex-col sm:flex-row items-center gap-3">

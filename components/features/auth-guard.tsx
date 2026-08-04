@@ -4,7 +4,7 @@ import { useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { usePathname, useRouter } from "next/navigation"
 
-const PUBLIC_PATHS = ["/login", "/register", "/offline", "/"]
+const PUBLIC_PATHS = ["/login", "/register", "/offline", "/", "/sw.js", "/icon-192x192.svg", "/icon-512x512.svg"]
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { status } = useSession()
