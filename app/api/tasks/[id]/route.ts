@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { requireAuth } from "@/lib/session"
+import { requireAuthApi } from "@/lib/session"
 import { db } from "@/lib/db"
 import { z } from "zod"
 
@@ -14,45 +14,61 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await requireAuth()
-  const { id } = await params
-  const body = await req.json()
-  const parsed = patchSchema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+  const session = await requireAuthApi()
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const task = await db.task.findFirst({
-    where: { id },
-    include: { fermentation: true },
-  })
-  if (!task || task.fermentation.userId !== session.user.id) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 })
+  try {
+    const { id } = await params
+    const body = await req.json()
+    const parsed = patchSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+    }
+
+    const task = await db.task.findFirst({
+      where: { id },
+      include: { fermentation: true },
+    })
+    if (!task || task.fermentation.userId !== session.user.id) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 })
+    }
+
+    const updated = await db.task.update({
+      where: { id },
+      data: parsed.data,
+    })
+
+    return NextResponse.json(updated)
+  } catch {
+    return NextResponse.json({ error: "Failed to update task" }, { status: 500 })
   }
-
-  const updated = await db.task.update({
-    where: { id },
-    data: parsed.data,
-  })
-
-  return NextResponse.json(updated)
 }
 
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await requireAuth()
-  const { id } = await params
-
-  const task = await db.task.findFirst({
-    where: { id },
-    include: { fermentation: true },
-  })
-  if (!task || task.fermentation.userId !== session.user.id) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 })
+  const session = await requireAuthApi()
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  await db.task.delete({ where: { id } })
-  return NextResponse.json({ success: true })
+  try {
+    const { id } = await params
+
+    const task = await db.task.findFirst({
+      where: { id },
+      include: { fermentation: true },
+    })
+    if (!task || task.fermentation.userId !== session.user.id) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 })
+    }
+
+    await db.task.delete({ where: { id } })
+    return NextResponse.json({ success: true })
+  } catch {
+    return NextResponse.json({ error: "Failed to delete task" }, { status: 500 })
+  }
 }

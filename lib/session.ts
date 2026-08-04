@@ -1,10 +1,9 @@
 import { auth } from "@/lib/auth"
-import { redirect } from "next/navigation"
-import { NextResponse } from "next/server"
 
 export async function requireAuth() {
   const session = await auth()
   if (!session?.user?.id) {
+    const { redirect } = await import("next/navigation")
     redirect("/login?expired=true")
   }
   return session as { user: { id: string; email: string; name: string | null } }
@@ -18,7 +17,7 @@ export async function getSessionUser() {
 export async function requireAuthApi() {
   const session = await auth()
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    return null
   }
   return session as { user: { id: string; email: string; name: string | null } }
 }

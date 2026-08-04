@@ -2,6 +2,7 @@ import { requireAuth } from "@/lib/session"
 import { db } from "@/lib/db"
 import { CalendarView } from "@/components/features/calendar-view"
 import { Metadata } from "next"
+import { serializeDates } from "@/lib/date-serializer"
 
 export const metadata: Metadata = {
   title: "Kalender",
@@ -20,13 +21,17 @@ export default async function CalendarPage() {
   })
 
   const tasks = rawTasks.map((t) => ({
-    ...t,
+    id: t.id,
+    title: t.title,
+    description: t.description,
     scheduledDate: t.scheduledDate.toISOString(),
-    createdAt: t.createdAt.toISOString(),
-    updatedAt: t.updatedAt.toISOString(),
+    completed: t.completed,
+    isCritical: t.isCritical,
     fermentation: {
+      id: t.fermentation.id,
       name: t.fermentation.name,
       type: t.fermentation.type,
+      status: t.fermentation.status,
     },
   }))
 

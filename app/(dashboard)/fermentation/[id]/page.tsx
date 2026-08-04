@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/session"
 import { notFound } from "next/navigation"
 import { FermentationDetail } from "@/components/features/fermentation-detail"
 import { Metadata } from "next"
+import { serializeDates } from "@/lib/date-serializer"
 
 export const metadata: Metadata = {
   title: "Detail Fermentasi",
@@ -17,8 +18,14 @@ export default async function FermentationDetailPage({
   const session = await requireAuth()
   const { id } = await params
 
-  const raw = await db.fermentation.findUnique({
-    where: { id, userId: session.user.id },
+  const raw = await db.fermentation.findFirst({
+    where: {
+      id,
+      OR: [
+        { userId: session.user.id },
+        { shares: { some: { userId: session.user.id } } },
+      ],
+    },
     include: { tasks: { orderBy: { scheduledDate: "asc" } } },
   })
 
@@ -26,19 +33,7 @@ export default async function FermentationDetailPage({
     notFound()
   }
 
-  const fermentation = {
-    ...raw,
-    startDate: raw.startDate.toISOString(),
-    endDate: raw.endDate.toISOString(),
-    createdAt: raw.createdAt.toISOString(),
-    updatedAt: raw.updatedAt.toISOString(),
-    tasks: raw.tasks.map((t) => ({
-      ...t,
-      scheduledDate: t.scheduledDate.toISOString(),
-      createdAt: t.createdAt.toISOString(),
-      updatedAt: t.updatedAt.toISOString(),
-    })),
-  }
+  const fermentation = serializeDates(raw)
 
   return <FermentationDetail fermentation={fermentation} />
 }

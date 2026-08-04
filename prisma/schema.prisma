@@ -17,6 +17,7 @@ model User {
   fermentations Fermentation[]
   sessions      Session[]
   subscriptions PushSubscription[]
+  shares        FermentationShare[]
 }
 
 model Fermentation {
@@ -26,6 +27,7 @@ model Fermentation {
   type          FermentationType
   name          String
   batchCode     String?
+  shareCode     String?     @unique
   startDate     DateTime
   endDate       DateTime
   totalDays     Int
@@ -34,6 +36,10 @@ model Fermentation {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   tasks         Task[]
+  shares        FermentationShare[]
+
+  @@index([userId])
+  @@index([status])
 }
 
 model Task {
@@ -47,6 +53,9 @@ model Task {
   isCritical      Boolean     @default(false)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+
+  @@index([fermentationId])
+  @@index([scheduledDate])
 }
 
 model Session {
@@ -63,6 +72,19 @@ model PushSubscription {
   endpoint String @unique
   p256dh   String
   auth     String
+}
+
+model FermentationShare {
+  id            String        @id @default(cuid())
+  fermentationId String
+  fermentation   Fermentation  @relation(fields: [fermentationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime      @default(now())
+
+  @@unique([fermentationId, userId])
+  @@index([fermentationId])
+  @@index([userId])
 }
 
 enum FermentationType {

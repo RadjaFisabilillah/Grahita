@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { AlertTriangle, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/components/ui/use-toast"
+import { apiFetch, handleApiError } from "@/lib/api-client"
 
 interface ActionTask {
   id: string
@@ -20,17 +21,14 @@ export function ActionRequiredCard({ task }: { task: ActionTask }) {
   async function markDone() {
     setIsLoading(true)
     try {
-      const res = await fetch(`/api/tasks/${task.id}`, {
+      const res = await apiFetch(`/api/tasks/${task.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ completed: true }),
       })
       if (!res.ok) {
-        toast({
-          title: "Gagal menyelesaikan tugas",
-          description: "Silakan coba lagi.",
-          variant: "destructive",
-        })
+        const data = await res.json()
+        handleApiError(data, "Gagal menyelesaikan tugas")
         return
       }
       router.refresh()

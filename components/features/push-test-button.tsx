@@ -3,6 +3,8 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Send, CheckCircle, AlertCircle, Loader2 } from "lucide-react"
+import { apiFetch, handleApiError } from "@/lib/api-client"
+import { cn } from "@/lib/utils"
 
 export function PushTestButton() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle")
@@ -12,7 +14,7 @@ export function PushTestButton() {
     setStatus("loading")
     setMessage("")
     try {
-      const res = await fetch("/api/test-push", {
+      const res = await apiFetch("/api/test-push", {
         method: "POST",
       })
       const data = await res.json()
@@ -22,7 +24,7 @@ export function PushTestButton() {
         setMessage(data.message || "Notifikasi terkirim! Cek notifikasi di device Anda.")
       } else {
         setStatus("error")
-        setMessage(data.error || "Gagal mengirim notifikasi. Pastikan push notifikasi sudah diaktifkan di pengaturan.")
+        handleApiError(data, "Gagal mengirim notifikasi. Pastikan push notifikasi sudah diaktifkan.")
       }
     } catch {
       setStatus("error")
@@ -70,8 +72,4 @@ export function PushTestButton() {
       )}
     </div>
   )
-}
-
-function cn(...classes: (string | false | undefined)[]) {
-  return classes.filter(Boolean).join(" ")
 }

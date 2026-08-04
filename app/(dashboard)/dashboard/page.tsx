@@ -3,9 +3,11 @@ import { db } from "@/lib/db"
 import { FermentationCard } from "@/components/features/fermentation-card"
 import { ActionRequiredCard } from "@/components/features/action-required-card"
 import { WalkthroughTrigger } from "@/components/features/walkthrough-trigger"
+import { JoinBatchForm } from "@/components/features/join-batch-form"
 import { FlaskConical, Plus } from "lucide-react"
 import Link from "next/link"
 import { Metadata } from "next"
+import { serializeDates } from "@/lib/date-serializer"
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -21,21 +23,21 @@ export default async function DashboardPage() {
     orderBy: { createdAt: "desc" },
   })
 
-  const fermentations = rawFermentations.map((f) => ({
-    ...f,
-    startDate: f.startDate.toISOString(),
-    endDate: f.endDate.toISOString(),
-    createdAt: f.createdAt.toISOString(),
-    updatedAt: f.updatedAt.toISOString(),
-    tasks: f.tasks.map((t) => ({
-      ...t,
-      scheduledDate: t.scheduledDate.toISOString(),
-      createdAt: t.createdAt.toISOString(),
-      updatedAt: t.updatedAt.toISOString(),
-    })),
-  }))
+  const shared = await db.fermentationShare.findMany({
+    where: { userId: session.user.id },
+    include: {
+      fermentation: {
+        include: { tasks: true },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  })
 
-  const activeCount = fermentations.filter((f) => f.status === "ACTIVE").length
+  const ownFermentations = rawFermentations.map((f) => serializeDates(f))
+  const sharedFermentations = shared.map((s) => serializeDates(s.fermentation))
+  const allFermentations = [...ownFermentations, ...sharedFermentations]
+
+  const activeCount = allFermentations.filter((f) => f.status === "ACTIVE").length
 
   const urgentTask = await db.task.findFirst({
     where: {
@@ -78,11 +80,14 @@ export default async function DashboardPage() {
       )}
 
       <section className="space-y-4">
-        <h3 className="font-headline text-lg font-semibold text-foreground">
-          Active Fermentations
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="font-headline text-lg font-semibold text-foreground">
+            Active Fermentations
+          </h3>
+          <JoinBatchForm />
+        </div>
 
-        {fermentations.length === 0 ? (
+        {allFermentations.length === 0 ? (
           <div className="text-center py-16 px-5 rounded-3xl border border-dashed border-border bg-card">
             <div className="bg-muted w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
               <FlaskConical className="h-8 w-8 text-muted-foreground" />
@@ -103,7 +108,7 @@ export default async function DashboardPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {fermentations.map((f) => (
+            {allFermentations.map((f) => (
               <FermentationCard key={f.id} fermentation={f} />
             ))}
           </div>

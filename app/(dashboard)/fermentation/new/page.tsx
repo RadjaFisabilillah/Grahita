@@ -11,6 +11,7 @@ import { ArrowLeft, Loader2, Calendar } from "lucide-react"
 import Link from "next/link"
 import { addDays, format } from "date-fns"
 import { id } from "date-fns/locale"
+import { apiFetch, handleApiError } from "@/lib/api-client"
 
 function getDefaultTotalDays(type: string) {
   return type === "POC" ? 14 : 90
@@ -69,21 +70,25 @@ function NewFermentationForm() {
       if (fruitForm) payload.fruitForm = fruitForm
     }
 
-    const res = await fetch("/api/fermentations", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    })
+    try {
+      const res = await apiFetch("/api/fermentations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
 
-    if (!res.ok) {
-      const data = await res.json()
-      setError(data.error || "Gagal membuat fermentasi")
+      if (!res.ok) {
+        const data = await res.json()
+        setError(data.error || "Gagal membuat fermentasi")
+        setIsLoading(false)
+        return
+      }
+
+      router.push("/dashboard")
+      router.refresh()
+    } catch {
       setIsLoading(false)
-      return
     }
-
-    router.push("/dashboard")
-    router.refresh()
   }
 
   function handleTypeChange(type: string) {

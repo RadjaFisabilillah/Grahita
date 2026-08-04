@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { requireAuth } from "@/lib/session"
+import { requireAuthApi } from "@/lib/session"
 import { db } from "@/lib/db"
 import webPush from "web-push"
 
@@ -12,10 +12,12 @@ if (vapidPublicKey && vapidPrivateKey) {
 }
 
 export async function POST() {
-  try {
-    const session = await requireAuth()
+  const session = await requireAuthApi()
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
 
-    // Find user's push subscriptions
+  try {
     const subscriptions = await db.pushSubscription.findMany({
       where: { userId: session.user.id },
     })
@@ -58,7 +60,6 @@ export async function POST() {
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : String(err)
         errors.push(errorMsg)
-        // Remove invalid/expired subscriptions
         if (
           errorMsg.includes("expired") ||
           errorMsg.includes("unsubscribe") ||

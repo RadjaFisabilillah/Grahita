@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { requireAuth } from "@/lib/session"
+import { requireAuthApi } from "@/lib/session"
 import { db } from "@/lib/db"
 import { z } from "zod"
 import { addDays } from "date-fns"
@@ -27,7 +27,6 @@ function generateEcoEnzymTasks(startDate: Date, totalDays: number, ventType: str
   const tasks: TaskInput[] = []
   const intervalDays = ventType === "AUTO" ? 3 : fruitForm === "BLENDED" ? 1 : 2
 
-  // Generate check tasks throughout the fermentation period
   let currentDay = intervalDays
   while (currentDay <= totalDays) {
     const scheduledDate = addDays(startDate, currentDay)
@@ -52,7 +51,6 @@ function generateEcoEnzymTasks(startDate: Date, totalDays: number, ventType: str
     currentDay += intervalDays
   }
 
-  // Add completion reminder
   tasks.push({
     title: "Eco Enzym siap diambil",
     description: `Fermentasi selesai setelah ${totalDays} hari. Saring dan simpan hasilnya.`,
@@ -93,62 +91,90 @@ function generatePOCTasks(startDate: Date, totalDays: number): TaskInput[] {
 }
 
 export async function GET() {
-  const session = await requireAuth()
-  const fermentations = await db.fermentation.findMany({
-    where: { userId: session.user.id },
-    include: { tasks: true },
-    orderBy: { createdAt: "desc" },
-  })
-  return NextResponse.json(fermentations)
+  const session = await requireAuthApi()
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  try {
+    const ownFermentations = await db.fermentation.findMany({
+      where: { userId: session.user.id },
+      include: { tasks: true },
+      orderBy: { createdAt: "desc" },
+    })
+
+    const shared = await db.fermentationShare.findMany({
+      where: { userId: session.user.id },
+      include: {
+        fermentation: {
+          include: { tasks: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    })
+
+    const fermentations = [...ownFermentations, ...shared.map((s) => s.fermentation)]
+
+    return NextResponse.json(fermentations)
+  } catch {
+    return NextResponse.json({ error: "Failed to fetch fermentations" }, { status: 500 })
+  }
 }
 
 export async function POST(req: Request) {
-  const session = await requireAuth()
-  const body = await req.json()
-  const parsed = createSchema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+  const session = await requireAuthApi()
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const data = parsed.data
+  try {
+    const body = await req.json()
+    const parsed = createSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+    }
 
-  const fermentation = await db.fermentation.create({
-    data: {
-      name: data.name,
-      type: data.type,
-      batchCode: data.batchCode ?? null,
-      startDate: data.startDate,
-      endDate: data.endDate,
-      totalDays: data.totalDays,
-      notes: data.notes ?? null,
-      userId: session.user.id,
-      status: "ACTIVE",
-    },
-  })
+    const data = parsed.data
 
-  // Auto-generate tasks based on type and config
-  let taskInputs: TaskInput[] = []
-
-  if (data.type === "ECO_ENZYM" && data.ventType && data.fruitForm) {
-    taskInputs = generateEcoEnzymTasks(data.startDate, data.totalDays, data.ventType, data.fruitForm)
-  } else if (data.type === "POC") {
-    taskInputs = generatePOCTasks(data.startDate, data.totalDays)
-  }
-
-  if (taskInputs.length > 0) {
-    await db.task.createMany({
-      data: taskInputs.map((t) => ({
-        ...t,
-        fermentationId: fermentation.id,
-        completed: false,
-      })),
+    const fermentation = await db.fermentation.create({
+      data: {
+        name: data.name,
+        type: data.type,
+        batchCode: data.batchCode ?? null,
+        startDate: data.startDate,
+        endDate: data.endDate,
+        totalDays: data.totalDays,
+        notes: data.notes ?? null,
+        userId: session.user.id,
+        status: "ACTIVE",
+      },
     })
+
+    let taskInputs: TaskInput[] = []
+
+    if (data.type === "ECO_ENZYM" && data.ventType && data.fruitForm) {
+      taskInputs = generateEcoEnzymTasks(data.startDate, data.totalDays, data.ventType, data.fruitForm)
+    } else if (data.type === "POC") {
+      taskInputs = generatePOCTasks(data.startDate, data.totalDays)
+    }
+
+    if (taskInputs.length > 0) {
+      await db.task.createMany({
+        data: taskInputs.map((t) => ({
+          ...t,
+          fermentationId: fermentation.id,
+          completed: false,
+        })),
+      })
+    }
+
+    const result = await db.fermentation.findUnique({
+      where: { id: fermentation.id },
+      include: { tasks: true },
+    })
+
+    return NextResponse.json(result, { status: 201 })
+  } catch {
+    return NextResponse.json({ error: "Failed to create fermentation" }, { status: 500 })
   }
-
-  const result = await db.fermentation.findUnique({
-    where: { id: fermentation.id },
-    include: { tasks: true },
-  })
-
-  return NextResponse.json(result, { status: 201 })
 }

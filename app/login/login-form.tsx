@@ -178,7 +178,7 @@ export function LoginForm({ expired, registered, errorParam }: LoginFormProps) {
       </Card>
 
       {/* Forgot Password Modal */}
-      <Dialog open={showForgotModal} onClose={() => setShowForgotModal(false)}>
+      <Dialog open={showForgotModal} onOpenChange={(open) => setShowForgotModal(open)}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Lupa Password?</DialogTitle>
@@ -193,7 +193,7 @@ export function LoginForm({ expired, registered, errorParam }: LoginFormProps) {
                 Kirim pesan WhatsApp ke admin dengan menyertakan email akun Anda.
               </p>
               <a
-                href="https://wa.me/6281234567890?text=Halo%20admin%2C%20saya%20lupa%20password%20akun%20Grahita%20saya.%20Email%3A%20"
+                href="https://wa.me/62895635537407?text=Halo%20admin%2C%20saya%20lupa%20password%20akun%20Grahita%20saya.%20Email%3A%20"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl font-headline font-semibold text-sm bg-[#25D366] text-white shadow-level-1 hover:opacity-90 active:scale-95 transition-all w-full"

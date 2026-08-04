@@ -2,12 +2,34 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, FlaskConical, Droplets, X } from "lucide-react"
+import { Plus, FlaskConical, Droplets, X, WifiOff } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { toast } from "@/components/ui/use-toast"
 
 export function SpeedDial() {
   const [open, setOpen] = useState(false)
+  const [isOnline, setIsOnline] = useState(true)
   const router = useRouter()
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    setIsOnline(navigator.onLine)
+
+    function handleOnline() {
+      setIsOnline(true)
+    }
+    function handleOffline() {
+      setIsOnline(false)
+    }
+
+    window.addEventListener("online", handleOnline)
+    window.addEventListener("offline", handleOffline)
+
+    return () => {
+      window.removeEventListener("online", handleOnline)
+      window.removeEventListener("offline", handleOffline)
+    }
+  }, [])
 
   const close = useCallback(() => setOpen(false), [])
 
@@ -21,6 +43,15 @@ export function SpeedDial() {
   }, [open, close])
 
   function navigate(type: string) {
+    if (!isOnline) {
+      toast({
+        title: "Offline",
+        description: "Anda sedang offline, hanya dapat membuat fermentasi saat online.",
+        variant: "destructive",
+      })
+      close()
+      return
+    }
     close()
     router.push(`/fermentation/new?type=${type}`)
   }
@@ -44,20 +75,40 @@ export function SpeedDial() {
           >
             <button
               onClick={() => navigate("POC")}
-              className="flex items-center gap-3 bg-lime dark:bg-secondary text-forest dark:text-secondary-foreground font-headline font-semibold text-sm px-5 py-3 rounded-2xl shadow-level-2 hover:bg-lime-dim dark:hover:bg-lime-dim active:scale-95 motion-safe:transition-all motion-reduce:transition-none"
+              disabled={!isOnline}
+              className={cn(
+                "flex items-center gap-3 font-headline font-semibold text-sm px-5 py-3 rounded-2xl shadow-level-2 active:scale-95 motion-safe:transition-all motion-reduce:transition-none",
+                isOnline
+                  ? "bg-lime dark:bg-secondary text-forest dark:text-secondary-foreground hover:bg-lime-dim dark:hover:bg-lime-dim"
+                  : "bg-muted text-muted-foreground cursor-not-allowed opacity-60"
+              )}
               role="menuitem"
               aria-label="Tambah fermentasi POC"
             >
-              <FlaskConical className="h-5 w-5" aria-hidden="true" />
+              {isOnline ? (
+                <FlaskConical className="h-5 w-5" aria-hidden="true" />
+              ) : (
+                <WifiOff className="h-5 w-5" aria-hidden="true" />
+              )}
               Tambah POC
             </button>
             <button
               onClick={() => navigate("ECO_ENZYM")}
-              className="flex items-center gap-3 bg-lime dark:bg-secondary text-forest dark:text-secondary-foreground font-headline font-semibold text-sm px-5 py-3 rounded-2xl shadow-level-2 hover:bg-lime-dim dark:hover:bg-lime-dim active:scale-95 motion-safe:transition-all motion-reduce:transition-none"
+              disabled={!isOnline}
+              className={cn(
+                "flex items-center gap-3 font-headline font-semibold text-sm px-5 py-3 rounded-2xl shadow-level-2 active:scale-95 motion-safe:transition-all motion-reduce:transition-none",
+                isOnline
+                  ? "bg-lime dark:bg-secondary text-forest dark:text-secondary-foreground hover:bg-lime-dim dark:hover:bg-lime-dim"
+                  : "bg-muted text-muted-foreground cursor-not-allowed opacity-60"
+              )}
               role="menuitem"
               aria-label="Tambah fermentasi Eco Enzym"
             >
-              <Droplets className="h-5 w-5" aria-hidden="true" />
+              {isOnline ? (
+                <Droplets className="h-5 w-5" aria-hidden="true" />
+              ) : (
+                <WifiOff className="h-5 w-5" aria-hidden="true" />
+              )}
               Tambah Eco Enzym
             </button>
           </div>

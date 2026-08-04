@@ -14,6 +14,7 @@ import { Fermentation } from "@/types"
 import { format, parseISO, differenceInDays, isPast } from "date-fns"
 import { id } from "date-fns/locale"
 import { toast } from "@/components/ui/use-toast"
+import { apiFetch, handleApiError } from "@/lib/api-client"
 import {
   Dialog,
   DialogContent,
@@ -38,6 +39,8 @@ import {
   Pencil,
   Trash2,
   PencilLine,
+  Share2,
+  Copy,
 } from "lucide-react"
 
 export function FermentationDetail({ fermentation }: { fermentation: Fermentation }) {
@@ -46,6 +49,8 @@ export function FermentationDetail({ fermentation }: { fermentation: Fermentatio
   const [isEditing, setIsEditing] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [shareCode, setShareCode] = useState<string | null>(null)
+  const [isShareLoading, setIsShareLoading] = useState(false)
 
   // Task edit state
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
@@ -71,17 +76,14 @@ export function FermentationDetail({ fermentation }: { fermentation: Fermentatio
   async function updateStatus(newStatus: string) {
     setIsSaving(true)
     try {
-      const res = await fetch(`/api/fermentations/${fermentation.id}`, {
+      const res = await apiFetch(`/api/fermentations/${fermentation.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       })
       if (!res.ok) {
-        toast({
-          title: "Gagal mengubah status",
-          description: "Silakan coba lagi.",
-          variant: "destructive",
-        })
+        const data = await res.json()
+        handleApiError(data, "Gagal mengubah status")
         return
       }
       setStatus(newStatus as Fermentation["status"])
@@ -107,7 +109,7 @@ export function FermentationDetail({ fermentation }: { fermentation: Fermentatio
 
     setIsSaving(true)
     try {
-      const res = await fetch(`/api/fermentations/${fermentation.id}`, {
+      const res = await apiFetch(`/api/fermentations/${fermentation.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -121,7 +123,16 @@ export function FermentationDetail({ fermentation }: { fermentation: Fermentatio
       if (res.ok) {
         setIsEditing(false)
         router.refresh()
+      } else {
+        const data = await res.json()
+        handleApiError(data, "Gagal menyimpan perubahan")
       }
+    } catch {
+      toast({
+        title: "Gagal menyimpan",
+        description: "Terjadi kesalahan. Silakan coba lagi.",
+        variant: "destructive",
+      })
     } finally {
       setIsSaving(false)
     }
@@ -130,13 +141,22 @@ export function FermentationDetail({ fermentation }: { fermentation: Fermentatio
   async function deleteFermentation() {
     setIsSaving(true)
     try {
-      const res = await fetch(`/api/fermentations/${fermentation.id}`, {
+      const res = await apiFetch(`/api/fermentations/${fermentation.id}`, {
         method: "DELETE",
       })
       if (res.ok) {
         router.push("/dashboard")
         router.refresh()
+      } else {
+        const data = await res.json()
+        handleApiError(data, "Gagal menghapus fermentasi")
       }
+    } catch {
+      toast({
+        title: "Gagal menghapus",
+        description: "Terjadi kesalahan. Silakan coba lagi.",
+        variant: "destructive",
+      })
     } finally {
       setIsSaving(false)
     }
@@ -151,11 +171,59 @@ export function FermentationDetail({ fermentation }: { fermentation: Fermentatio
     setIsEditing(false)
   }
 
+  async function createShareCode() {
+    setIsShareLoading(true)
+    try {
+      const res = await apiFetch(`/api/fermentations/${fermentation.id}/share`, {
+        method: "POST",
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        handleApiError(data, "Gagal membuat kode")
+        return
+      }
+      const data = await res.json()
+      setShareCode(data.shareCode)
+    } catch {
+      toast({
+        title: "Gagal membuat kode",
+        description: "Terjadi kesalahan. Silakan coba lagi.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsShareLoading(false)
+    }
+  }
+
+  function copyShareCode() {
+    if (!shareCode) return
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(shareCode).then(() => {
+        toast({
+          title: "Berhasil disalin",
+          description: `Kode ${shareCode} telah disalin ke clipboard.`,
+        })
+      })
+    } else {
+      // Fallback for older browsers
+      const el = document.createElement("textarea")
+      el.value = shareCode
+      document.body.appendChild(el)
+      el.select()
+      document.execCommand("copy")
+      document.body.removeChild(el)
+      toast({
+        title: "Berhasil disalin",
+        description: `Kode ${shareCode} telah disalin ke clipboard.`,
+      })
+    }
+  }
+
   async function saveTask(taskId: string) {
     if (!editTaskTitle.trim()) return
     setIsSaving(true)
     try {
-      const res = await fetch(`/api/tasks/${taskId}`, {
+      const res = await apiFetch(`/api/tasks/${taskId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -166,7 +234,16 @@ export function FermentationDetail({ fermentation }: { fermentation: Fermentatio
       if (res.ok) {
         setEditingTaskId(null)
         router.refresh()
+      } else {
+        const data = await res.json()
+        handleApiError(data, "Gagal menyimpan tugas")
       }
+    } catch {
+      toast({
+        title: "Gagal menyimpan tugas",
+        description: "Terjadi kesalahan. Silakan coba lagi.",
+        variant: "destructive",
+      })
     } finally {
       setIsSaving(false)
     }
@@ -175,12 +252,21 @@ export function FermentationDetail({ fermentation }: { fermentation: Fermentatio
   async function deleteTask(taskId: string) {
     setIsSaving(true)
     try {
-      const res = await fetch(`/api/tasks/${taskId}`, {
+      const res = await apiFetch(`/api/tasks/${taskId}`, {
         method: "DELETE",
       })
       if (res.ok) {
         router.refresh()
+      } else {
+        const data = await res.json()
+        handleApiError(data, "Gagal menghapus tugas")
       }
+    } catch {
+      toast({
+        title: "Gagal menghapus tugas",
+        description: "Terjadi kesalahan. Silakan coba lagi.",
+        variant: "destructive",
+      })
     } finally {
       setIsSaving(false)
     }
@@ -226,6 +312,15 @@ export function FermentationDetail({ fermentation }: { fermentation: Fermentatio
               aria-label="Edit fermentasi"
             >
               <Pencil className="h-4 w-4 text-muted-foreground" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={createShareCode}
+              disabled={isShareLoading}
+              aria-label="Bagikan fermentasi"
+            >
+              <Share2 className="h-4 w-4 text-muted-foreground" />
             </Button>
             <Button
               variant="ghost"
@@ -411,6 +506,29 @@ export function FermentationDetail({ fermentation }: { fermentation: Fermentatio
                   </Button>
                 )}
               </div>
+
+              {/* Share code display */}
+              {shareCode && (
+                <div className="mt-3 rounded-xl bg-muted/50 border border-border p-3">
+                  <p className="font-headline text-xs uppercase text-muted-foreground mb-2">Kode Berbagi</p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 bg-background rounded-xl px-4 py-2.5 font-headline text-lg font-bold text-forest dark:text-secondary tracking-wider text-center">
+                      {shareCode}
+                    </div>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={copyShareCode}
+                      aria-label="Salin kode"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="font-body text-xs text-muted-foreground mt-2">
+                    Bagikan kode ini agar orang lain dapat mengakses dan mengedit batch fermentasi ini.
+                  </p>
+                </div>
+              )}
             </>
           )}
         </CardContent>
@@ -440,17 +558,14 @@ export function FermentationDetail({ fermentation }: { fermentation: Fermentatio
                     className="mt-0.5"
                     onClick={async () => {
                       try {
-                        const res = await fetch(`/api/tasks/${task.id}`, {
+                        const res = await apiFetch(`/api/tasks/${task.id}`, {
                           method: "PATCH",
                           headers: { "Content-Type": "application/json" },
                           body: JSON.stringify({ completed: !task.completed }),
                         })
                         if (!res.ok) {
-                          toast({
-                            title: "Gagal mengubah tugas",
-                            description: "Silakan coba lagi.",
-                            variant: "destructive",
-                          })
+                          const data = await res.json()
+                          handleApiError(data, "Gagal mengubah tugas")
                           return
                         }
                         router.refresh()
@@ -541,7 +656,7 @@ export function FermentationDetail({ fermentation }: { fermentation: Fermentatio
       </Card>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleting} onClose={() => setIsDeleting(false)}>
+      <Dialog open={isDeleting} onOpenChange={(open) => setIsDeleting(open)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Hapus Fermentasi</DialogTitle>

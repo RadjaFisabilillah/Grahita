@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { WalkthroughModal } from "./walkthrough-modal"
@@ -20,7 +21,13 @@ export function TopAppBar({ userName }: { userName: string }) {
       <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/40 flex items-center justify-between px-5 h-16">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-lg flex items-center justify-center overflow-hidden">
-            <img src="/icon-512x512.png" alt="Grahita" className="h-full w-full object-cover" />
+            <Image
+              src="/icon-512x512.png"
+              alt="Grahita"
+              width={32}
+              height={32}
+              className="h-full w-full object-cover"
+            />
           </div>
           <h1 className="font-headline text-xl font-bold text-foreground tracking-tight">
             Grahita
