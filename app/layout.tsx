@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next"
 import { Lexend, Libre_Franklin } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/providers/theme-provider"
+import { SessionProvider } from "@/components/providers/session-provider"
+import { AuthGuard } from "@/components/features/auth-guard"
 import { Toaster } from "@/components/ui/toaster"
 import { InstallPrompt } from "@/components/features/install-prompt"
 import { ServiceWorkerRegister } from "@/components/features/sw-register"
@@ -87,10 +89,12 @@ export default function RootLayout({
       </head>
       <body className="font-body min-h-[100dvh] bg-background text-foreground antialiased">
         <ThemeProvider>
-          {children}
-          <Toaster />
-          <InstallPrompt />
-          <ServiceWorkerRegister />
+          <SessionProvider>
+            <AuthGuard>{children}</AuthGuard>
+            <Toaster />
+            <InstallPrompt />
+            <ServiceWorkerRegister />
+          </SessionProvider>
         </ThemeProvider>
       </body>
     </html>
