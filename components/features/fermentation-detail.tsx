@@ -32,8 +32,6 @@ import {
   CheckCircle2,
   Circle,
   AlertCircle,
-  Play,
-  Pause,
   Check,
   X,
   Pencil,
@@ -59,7 +57,6 @@ export function FermentationDetail({ fermentation }: { fermentation: Fermentatio
 
   // Form state
   const [editName, setEditName] = useState(fermentation.name)
-  const [editBatchCode, setEditBatchCode] = useState(fermentation.batchCode || "")
   const [editStartDate, setEditStartDate] = useState(
     format(parseISO(fermentation.startDate), "yyyy-MM-dd")
   )
@@ -114,7 +111,6 @@ export function FermentationDetail({ fermentation }: { fermentation: Fermentatio
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: editName.trim(),
-          batchCode: editBatchCode.trim() || null,
           startDate: new Date(editStartDate).toISOString(),
           totalDays: totalDaysNum,
           notes: editNotes.trim() || null,
@@ -164,7 +160,6 @@ export function FermentationDetail({ fermentation }: { fermentation: Fermentatio
 
   function cancelEdit() {
     setEditName(fermentation.name)
-    setEditBatchCode(fermentation.batchCode || "")
     setEditStartDate(format(parseISO(fermentation.startDate), "yyyy-MM-dd"))
     setEditTotalDays(fermentation.totalDays.toString())
     setEditNotes(fermentation.notes || "")
@@ -353,16 +348,6 @@ export function FermentationDetail({ fermentation }: { fermentation: Fermentatio
                         className="font-headline"
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="edit-batch" className="font-headline text-xs uppercase text-muted-foreground mb-1.5 block">
-                        Kode Batch
-                      </Label>
-                      <Input
-                        id="edit-batch"
-                        value={editBatchCode}
-                        onChange={(e) => setEditBatchCode(e.target.value)}
-                      />
-                    </div>
                   </div>
                 ) : (
                   <>
@@ -379,9 +364,6 @@ export function FermentationDetail({ fermentation }: { fermentation: Fermentatio
                           </>
                         )}
                       </span>
-                      {fermentation.batchCode && (
-                        <Badge variant="outline">{fermentation.batchCode}</Badge>
-                      )}
                     </div>
                   </>
                 )}
@@ -486,18 +468,8 @@ export function FermentationDetail({ fermentation }: { fermentation: Fermentatio
 
               <div className="flex gap-2 pt-2">
                 {status === "ACTIVE" && (
-                  <>
-                    <Button variant="outline" size="sm" onClick={() => updateStatus("PAUSED")} disabled={isSaving}>
-                      <Pause className="h-4 w-4 mr-1" /> Jeda
-                    </Button>
-                    <Button variant="secondary" size="sm" onClick={() => updateStatus("COMPLETED")} disabled={isSaving}>
-                      <Check className="h-4 w-4 mr-1" /> Selesai
-                    </Button>
-                  </>
-                )}
-                {status === "PAUSED" && (
-                  <Button variant="default" size="sm" onClick={() => updateStatus("ACTIVE")} disabled={isSaving}>
-                    <Play className="h-4 w-4 mr-1" /> Lanjutkan
+                  <Button variant="secondary" size="sm" onClick={() => updateStatus("COMPLETED")} disabled={isSaving}>
+                    <Check className="h-4 w-4 mr-1" /> Selesai
                   </Button>
                 )}
                 {(status === "ACTIVE" || status === "PAUSED") && (

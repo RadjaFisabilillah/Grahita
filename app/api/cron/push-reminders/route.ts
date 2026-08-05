@@ -77,6 +77,7 @@ async function sendPushNotifications(
             tag: `${options.tagPrefix}-${today.toISOString().split("T")[0]}`,
             requireInteraction: false,
             renotify: true,
+            url: "/calendar",
           })
         )
         sentCount++

@@ -52,9 +52,10 @@ export async function POST() {
           JSON.stringify({
             title: "Test Notifikasi Grahita",
             body: "Notifikasi ini adalah uji coba. Push notification berfungsi dengan baik!",
-            tag: "grahita-test-notification",
+            tag: `grahita-test-notification-${Date.now()}`,
             requireInteraction: false,
             renotify: true,
+            url: "/calendar",
           })
         )
         sentCount++

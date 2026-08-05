@@ -56,7 +56,6 @@ function NewFermentationForm() {
     const payload: Record<string, unknown> = {
       name: formData.get("name") as string,
       type: formData.get("type") as string,
-      batchCode: (formData.get("batchCode") as string) || null,
       startDate: startDateStr,
       endDate: end.toISOString().split("T")[0],
       totalDays: totalDaysNum,
@@ -189,11 +188,6 @@ function NewFermentationForm() {
                 </div>
               </div>
             )}
-
-            <div className="space-y-2">
-              <Label htmlFor="batchCode" className="font-headline text-xs uppercase">Kode Batch (opsional)</Label>
-              <Input id="batchCode" name="batchCode" placeholder="B-001" />
-            </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

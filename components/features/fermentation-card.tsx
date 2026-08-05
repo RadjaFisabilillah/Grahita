@@ -62,7 +62,6 @@ export function FermentationCard({
                       <Droplets className="h-3 w-3" /> Eco Enzym
                     </span>
                   )}
-                  {fermentation.batchCode && ` · ${fermentation.batchCode}`}
                 </p>
               </div>
               <ProgressRing progress={progress} size={56} strokeWidth={5} />

@@ -1,5 +1,5 @@
-const CACHE_SHELL = "grahita-shell-v2"
-const CACHE_RUNTIME = "grahita-runtime-v2"
+const CACHE_SHELL = "grahita-shell-v3"
+const CACHE_RUNTIME = "grahita-runtime-v3"
 const SHELL_ASSETS = [
   "/",
   "/login",
@@ -108,6 +108,8 @@ self.addEventListener("fetch", (event) => {
 
 self.addEventListener("push", (event) => {
   const data = event.data?.json() ?? {}
+  console.log("[SW] Push received:", data)
+
   const options = {
     body: data.body || "Pengingat tugas fermentasi",
     icon: "/icon-192x192.png",
@@ -117,7 +119,13 @@ self.addEventListener("push", (event) => {
     renotify: true,
     silent: false,
     vibrate: [200, 100, 200],
+    sound: "default",
+    data: {
+      url: data.url || "/calendar",
+      ...data,
+    },
   }
+  console.log("[SW] Showing notification:", data.title || "Grahita")
   event.waitUntil(
     self.registration.showNotification(data.title || "Grahita", options)
   )
@@ -131,5 +139,15 @@ self.addEventListener("message", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close()
-  event.waitUntil(self.clients.openWindow("/calendar"))
+  const url = event.notification.data?.url || "/calendar"
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if ("focus" in client) {
+          return client.focus()
+        }
+      }
+      return self.clients.openWindow(url)
+    })
+  )
 })
