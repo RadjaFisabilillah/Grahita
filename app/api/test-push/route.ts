@@ -54,6 +54,7 @@ export async function POST() {
             body: "Notifikasi ini adalah uji coba. Push notification berfungsi dengan baik!",
             tag: "grahita-test-notification",
             requireInteraction: false,
+            renotify: true,
           })
         )
         sentCount++

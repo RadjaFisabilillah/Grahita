@@ -8,7 +8,13 @@ import { Fermentation } from "@/types"
 import { differenceInDays, parseISO } from "date-fns"
 import { Timer, FlaskConical, Droplets } from "lucide-react"
 
-export function FermentationCard({ fermentation }: { fermentation: Fermentation }) {
+export function FermentationCard({
+  fermentation,
+  isShared,
+}: {
+  fermentation: Fermentation
+  isShared?: boolean
+}) {
   const start = parseISO(fermentation.startDate)
   const end = parseISO(fermentation.endDate)
   const now = new Date()
@@ -33,9 +39,16 @@ export function FermentationCard({ fermentation }: { fermentation: Fermentation 
           <CardContent className="p-5 pl-6">
             <div className="flex items-start justify-between mb-3">
               <div className="min-w-0 flex-1 mr-3">
-                <Badge variant={config.variant} className="mb-2 text-[10px]">
-                  {config.label}
-                </Badge>
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant={config.variant} className="text-[10px]">
+                    {config.label}
+                  </Badge>
+                  {isShared && (
+                    <Badge variant="outline" className="text-[10px] bg-clay/20 text-clay-foreground border-clay/30">
+                      Shared
+                    </Badge>
+                  )}
+                </div>
                 <h4 className="font-headline text-base font-semibold text-foreground truncate">
                   {fermentation.name}
                 </h4>

@@ -75,6 +75,8 @@ async function sendPushNotifications(
             title,
             body,
             tag: `${options.tagPrefix}-${today.toISOString().split("T")[0]}`,
+            requireInteraction: false,
+            renotify: true,
           })
         )
         sentCount++

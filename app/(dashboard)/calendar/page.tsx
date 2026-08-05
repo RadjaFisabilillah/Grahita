@@ -14,7 +14,10 @@ export default async function CalendarPage() {
 
   const rawTasks = await db.task.findMany({
     where: {
-      fermentation: { userId: session.user.id },
+      OR: [
+        { fermentation: { userId: session.user.id } },
+        { fermentation: { shares: { some: { userId: session.user.id } } } },
+      ],
     },
     include: { fermentation: true },
     orderBy: { scheduledDate: "asc" },

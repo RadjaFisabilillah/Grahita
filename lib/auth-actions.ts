@@ -8,17 +8,21 @@ const registerSchema = z.object({
   name: z.string().min(1).optional(),
 })
 
-export async function registerUser(data: unknown) {
+export type RegisterUserResult =
+  | { success: false; error: string; details?: z.typeToFlattenedError<{ email: string; password: string; name?: string }> }
+  | { success: true; user: { id: string; email: string; name: string | null } }
+
+export async function registerUser(data: unknown): Promise<RegisterUserResult> {
   const parsed = registerSchema.safeParse(data)
   if (!parsed.success) {
-    return { error: "Data tidak valid", details: parsed.error.flatten() }
+    return { success: false, error: "Data tidak valid", details: parsed.error.flatten() }
   }
 
   const existing = await db.user.findUnique({
     where: { email: parsed.data.email },
   })
   if (existing) {
-    return { error: "Email sudah terdaftar" }
+    return { success: false, error: "Email sudah terdaftar" }
   }
 
   const hashed = await bcrypt.hash(parsed.data.password, 12)

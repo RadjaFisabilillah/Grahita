@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const result = await registerUser(body)
 
-    if (result.error) {
+    if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 400 })
     }
 

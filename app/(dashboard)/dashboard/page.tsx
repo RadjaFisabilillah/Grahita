@@ -42,7 +42,10 @@ export default async function DashboardPage() {
   const urgentTask = await db.task.findFirst({
     where: {
       completed: false,
-      fermentation: { userId: session.user.id },
+      OR: [
+        { fermentation: { userId: session.user.id } },
+        { fermentation: { shares: { some: { userId: session.user.id } } } },
+      ],
     },
     include: { fermentation: true },
     orderBy: { scheduledDate: "asc" },
@@ -109,7 +112,7 @@ export default async function DashboardPage() {
         ) : (
           <div className="space-y-4">
             {allFermentations.map((f) => (
-              <FermentationCard key={f.id} fermentation={f} />
+              <FermentationCard key={f.id} fermentation={f} isShared={f.userId !== session.user.id} />
             ))}
           </div>
         )}

@@ -113,7 +113,10 @@ self.addEventListener("push", (event) => {
     icon: "/icon-192x192.png",
     badge: "/icon-192x192.png",
     tag: data.tag || "grahita-reminder",
-    requireInteraction: true,
+    requireInteraction: false,
+    renotify: true,
+    silent: false,
+    vibrate: [200, 100, 200],
   }
   event.waitUntil(
     self.registration.showNotification(data.title || "Grahita", options)

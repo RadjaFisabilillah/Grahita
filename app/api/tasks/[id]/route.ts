@@ -29,9 +29,17 @@ export async function PATCH(
 
     const task = await db.task.findFirst({
       where: { id },
-      include: { fermentation: true },
+      include: { fermentation: { include: { shares: true } } },
     })
-    if (!task || task.fermentation.userId !== session.user.id) {
+
+    if (!task) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 })
+    }
+
+    const isOwner = task.fermentation.userId === session.user.id
+    const isShared = task.fermentation.shares.some((s) => s.userId === session.user.id)
+
+    if (!isOwner && !isShared) {
       return NextResponse.json({ error: "Not found" }, { status: 404 })
     }
 
@@ -60,9 +68,17 @@ export async function DELETE(
 
     const task = await db.task.findFirst({
       where: { id },
-      include: { fermentation: true },
+      include: { fermentation: { include: { shares: true } } },
     })
-    if (!task || task.fermentation.userId !== session.user.id) {
+
+    if (!task) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 })
+    }
+
+    const isOwner = task.fermentation.userId === session.user.id
+    const isShared = task.fermentation.shares.some((s) => s.userId === session.user.id)
+
+    if (!isOwner && !isShared) {
       return NextResponse.json({ error: "Not found" }, { status: 404 })
     }
 

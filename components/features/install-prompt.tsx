@@ -20,8 +20,14 @@ function dismiss() {
   localStorage.setItem(DISMISS_KEY, Date.now().toString())
 }
 
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[]
+  readonly userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>
+  prompt(): Promise<void>
+}
+
 export function InstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [isVisible, setIsVisible] = useState(false)
   const [isIOS, setIsIOS] = useState(false)
   const [isDismissedState, setIsDismissedState] = useState(false)
@@ -34,13 +40,13 @@ export function InstallPrompt() {
 
     const handler = (e: Event) => {
       e.preventDefault()
-      setDeferredPrompt(e)
+      setDeferredPrompt(e as BeforeInstallPromptEvent)
       setIsVisible(true)
     }
     window.addEventListener("beforeinstallprompt", handler)
 
     const isIOSDevice =
-      /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream
+      /iPad|iPhone|iPod/.test(navigator.userAgent) && !("MSStream" in window)
     setIsIOS(isIOSDevice)
 
     // Show iOS hint after a short delay on first visit

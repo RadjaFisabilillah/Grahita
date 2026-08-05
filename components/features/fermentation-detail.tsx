@@ -527,6 +527,41 @@ export function FermentationDetail({ fermentation }: { fermentation: Fermentatio
                   <p className="font-body text-xs text-muted-foreground mt-2">
                     Bagikan kode ini agar orang lain dapat mengakses dan mengedit batch fermentasi ini.
                   </p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive mt-2 w-full"
+                    onClick={async () => {
+                      if (!confirm("Cabut kode berbagi? Kode yang sudah dibagikan tidak bisa digunakan lagi, tapi anggota yang sudah bergabung tetap memiliki akses.")) return
+                      setIsShareLoading(true)
+                      try {
+                        const res = await apiFetch(`/api/fermentations/${fermentation.id}/share`, {
+                          method: "DELETE",
+                        })
+                        if (res.ok) {
+                          setShareCode(null)
+                          toast({
+                            title: "Kode dicabut",
+                            description: "Kode berbagi telah dinonaktifkan.",
+                          })
+                        } else {
+                          const data = await res.json()
+                          handleApiError(data, "Gagal mencabut kode")
+                        }
+                      } catch {
+                        toast({
+                          title: "Gagal mencabut kode",
+                          description: "Terjadi kesalahan. Silakan coba lagi.",
+                          variant: "destructive",
+                        })
+                      } finally {
+                        setIsShareLoading(false)
+                      }
+                    }}
+                    disabled={isShareLoading}
+                  >
+                    Cabut Kode
+                  </Button>
                 </div>
               )}
             </>

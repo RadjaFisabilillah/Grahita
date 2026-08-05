@@ -5,31 +5,12 @@ import { useRouter } from "next/navigation"
 import { Plus, FlaskConical, Droplets, X, WifiOff } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "@/components/ui/use-toast"
+import { useOnlineStatus } from "@/hooks/use-online-status"
 
 export function SpeedDial() {
   const [open, setOpen] = useState(false)
-  const [isOnline, setIsOnline] = useState(true)
+  const isOnline = useOnlineStatus()
   const router = useRouter()
-
-  useEffect(() => {
-    if (typeof window === "undefined") return
-    setIsOnline(navigator.onLine)
-
-    function handleOnline() {
-      setIsOnline(true)
-    }
-    function handleOffline() {
-      setIsOnline(false)
-    }
-
-    window.addEventListener("online", handleOnline)
-    window.addEventListener("offline", handleOffline)
-
-    return () => {
-      window.removeEventListener("online", handleOnline)
-      window.removeEventListener("offline", handleOffline)
-    }
-  }, [])
 
   const close = useCallback(() => setOpen(false), [])
 

@@ -4,6 +4,7 @@ export interface Fermentation {
   type: "POC" | "ECO_ENZYM"
   name: string
   batchCode: string | null
+  shareCode: string | null
   startDate: string
   endDate: string
   totalDays: number

@@ -28,17 +28,17 @@ export const metadata: Metadata = {
   keywords: ["fermentasi", "POC", "Eco Enzym", "pupuk organik", "monitoring", "agriculture", "pertanian"],
   authors: [{ name: "Grahita Team" }],
   creator: "Grahita",
-  metadataBase: new URL("https://grahita.vercel.app"),
+  metadataBase: new URL("https://grahita-eight.vercel.app"),
   openGraph: {
     title: "Grahita — Monitoring Fermentasi",
     description: "PWA monitoring proses pembuatan POC dan Eco Enzym.",
-    url: "https://grahita.vercel.app",
+    url: "https://grahita-eight.vercel.app",
     siteName: "Grahita",
     locale: "id_ID",
     type: "website",
     images: [
       {
-        url: "https://grahita.vercel.app/icon-512x512.png",
+        url: "https://grahita-eight.vercel.app/icon-512x512.png",
         width: 512,
         height: 512,
         alt: "Grahita App Icon",
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Grahita — Monitoring Fermentasi",
     description: "PWA monitoring proses pembuatan POC dan Eco Enzym.",
-    images: ["https://grahita.vercel.app/icon-512x512.png"],
+    images: ["https://grahita-eight.vercel.app/icon-512x512.png"],
   },
   manifest: "/manifest.json",
   appleWebApp: {
