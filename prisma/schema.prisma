@@ -65,6 +65,17 @@ model Session {
   expiresAt    DateTime
 }
 
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([token])
+}
+
 model PushSubscription {
   id       String @id @default(cuid())
   userId   String

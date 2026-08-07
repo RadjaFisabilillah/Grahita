@@ -20,6 +20,7 @@ PWA monitoring proses pembuatan **POC (Pupuk Organik Cair)** dan **Eco Enzym** u
 | Fonts | Lexend (headline) + Libre Franklin (body) |
 | Database | PostgreSQL + Prisma ORM 6.19 |
 | Auth | Auth.js v5 (NextAuth beta) |
+| Email | Resend + React Email |
 | PWA | Web App Manifest + Service Worker + Web Push |
 
 ## Setup Development
@@ -42,6 +43,8 @@ PWA monitoring proses pembuatan **POC (Pupuk Organik Cair)** dan **Eco Enzym** u
    - `NEXTAUTH_URL`
    - `NEXT_PUBLIC_VAPID_PUBLIC_KEY`
    - `VAPID_PRIVATE_KEY`
+   - `RESEND_API_KEY` (untuk email reset password)
+   - `RESEND_FROM_EMAIL` (opsional, default `Grahita <onboarding@resend.dev>`)
 4. Deploy
 
 ## Akun Demo

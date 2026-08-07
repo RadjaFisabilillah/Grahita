@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import webPush from "web-push"
-import { startOfDay, endOfDay, addDays } from "date-fns"
+import { startOfDay, endOfDay, addDays, differenceInCalendarDays, format } from "date-fns"
+import { id } from "date-fns/locale"
 
 const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
 const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY
@@ -24,45 +25,57 @@ function isAuthorized(req: Request) {
   return false
 }
 
-interface TaskGroup {
-  userId: string
-  tasks: Array<{
-    title: string
-    fermentation: { name: string }
-  }>
-}
-
-function groupTasksByUser(
-  tasks: Array<{ title: string; fermentation: { name: string; userId: string } }>
-): Map<string, TaskGroup> {
-  const map = new Map<string, TaskGroup>()
-  for (const task of tasks) {
-    const userId = task.fermentation.userId
-    if (!map.has(userId)) {
-      map.set(userId, { userId, tasks: [] })
-    }
-    map.get(userId)!.tasks.push(task)
+interface TaskItem {
+  id: string
+  title: string
+  scheduledDate: Date
+  fermentation: {
+    id: string
+    name: string
+    type: string
+    userId: string
+    startDate: Date
+    totalDays: number
   }
-  return map
 }
 
-async function sendPushNotifications(
-  grouped: Map<string, TaskGroup>,
-  options: { tagPrefix: string; titleBuilder: (count: number) => string; bodyBuilder: (count: number, firstTitle: string, fermentationName: string) => string }
-) {
+function typeLabel(type: string): string {
+  return type === "POC" ? "POC" : "Eco Enzym"
+}
+
+function buildMessage(task: TaskItem, when: "today" | "tomorrow") {
+  const { fermentation } = task
+  const dayNumber = differenceInCalendarDays(task.scheduledDate, fermentation.startDate) + 1
+  const dueLabel =
+    when === "today" ? "hari ini" : "besok"
+  const dayInfo =
+    fermentation.totalDays > 0
+      ? `Hari ke-${dayNumber} dari ${fermentation.totalDays}.`
+      : `Hari ke-${dayNumber}.`
+
+  return {
+    title: `${typeLabel(fermentation.type)} ${fermentation.name} — ${task.title}`,
+    body: `Jatuh tempo ${dueLabel} (${format(task.scheduledDate, "d MMM", { locale: id })}). ${dayInfo}`,
+    tag: `${when}-${task.id}`,
+    url: `/fermentation/${fermentation.id}`,
+    data: {
+      fermentationId: fermentation.id,
+      taskId: task.id,
+    },
+  }
+}
+
+async function sendPushForTasks(tasks: TaskItem[], when: "today" | "tomorrow") {
   let sentCount = 0
   const errors: string[] = []
-  const today = new Date()
 
-  for (const [userId, group] of grouped) {
-    const subscriptions = await db.pushSubscription.findMany({ where: { userId } })
+  for (const task of tasks) {
+    const subscriptions = await db.pushSubscription.findMany({
+      where: { userId: task.fermentation.userId },
+    })
     if (subscriptions.length === 0) continue
 
-    const tasks = group.tasks
-    const fermentationName = tasks[0].fermentation.name
-    const taskCount = tasks.length
-    const title = options.titleBuilder(taskCount)
-    const body = options.bodyBuilder(taskCount, tasks[0].title, fermentationName)
+    const payload = buildMessage(task, when)
 
     for (const sub of subscriptions) {
       try {
@@ -72,12 +85,9 @@ async function sendPushNotifications(
             keys: { p256dh: sub.p256dh, auth: sub.auth },
           },
           JSON.stringify({
-            title,
-            body,
-            tag: `${options.tagPrefix}-${today.toISOString().split("T")[0]}`,
+            ...payload,
             requireInteraction: false,
-            renotify: true,
-            url: "/calendar",
+            renotify: false,
           })
         )
         sentCount++
@@ -110,54 +120,59 @@ export async function GET(req: Request) {
   const tomorrowStart = startOfDay(addDays(today, 1))
   const tomorrowEnd = endOfDay(addDays(today, 1))
 
+  const taskSelect = {
+    id: true,
+    title: true,
+    scheduledDate: true,
+    fermentation: {
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        userId: true,
+        startDate: true,
+        totalDays: true,
+      },
+    },
+  }
+
   const [tasksDueToday, tasksDueTomorrow] = await Promise.all([
     db.task.findMany({
       where: {
         completed: false,
         scheduledDate: { gte: todayStart, lte: todayEnd },
       },
-      include: { fermentation: { select: { name: true, userId: true } } },
+      select: taskSelect,
     }),
     db.task.findMany({
       where: {
         completed: false,
         scheduledDate: { gte: tomorrowStart, lte: tomorrowEnd },
       },
-      include: { fermentation: { select: { name: true, userId: true } } },
+      select: taskSelect,
     }),
   ])
 
-  const todayGrouped = groupTasksByUser(tasksDueToday)
-  const tomorrowGrouped = groupTasksByUser(tasksDueTomorrow)
+  const todayResult = await sendPushForTasks(tasksDueToday as unknown as TaskItem[], "today")
+  const tomorrowResult = await sendPushForTasks(tasksDueTomorrow as unknown as TaskItem[], "tomorrow")
 
-  const todayResult = await sendPushNotifications(todayGrouped, {
-    tagPrefix: "grahita-task",
-    titleBuilder: (count) => (count === 1 ? "Tugas Hari Ini" : `${count} Tugas Hari Ini`),
-    bodyBuilder: (count, firstTitle, name) =>
-      count === 1
-        ? `${firstTitle} — ${name}`
-        : `${count} tugas fermentasi "${name}" perlu dikerjakan`,
-  })
-
-  const tomorrowResult = await sendPushNotifications(tomorrowGrouped, {
-    tagPrefix: "grahita-task-tomorrow",
-    titleBuilder: (count) => (count === 1 ? "Tugas Besok" : `${count} Tugas Besok`),
-    bodyBuilder: (count, firstTitle, name) =>
-      count === 1
-        ? `${firstTitle} — ${name} (besok)`
-        : `${count} tugas fermentasi "${name}" jatuh tempo besok`,
-  })
+  const usersNotifiedToday = new Set(
+    tasksDueToday.map((t) => t.fermentation.userId)
+  ).size
+  const usersNotifiedTomorrow = new Set(
+    tasksDueTomorrow.map((t) => t.fermentation.userId)
+  ).size
 
   return NextResponse.json({
     today: {
       sent: todayResult.sentCount,
       tasksFound: tasksDueToday.length,
-      usersNotified: todayGrouped.size,
+      usersNotified: usersNotifiedToday,
     },
     tomorrow: {
       sent: tomorrowResult.sentCount,
       tasksFound: tasksDueTomorrow.length,
-      usersNotified: tomorrowGrouped.size,
+      usersNotified: usersNotifiedTomorrow,
     },
   })
 }

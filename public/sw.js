@@ -1,5 +1,5 @@
-const CACHE_SHELL = "grahita-shell-v3"
-const CACHE_RUNTIME = "grahita-runtime-v3"
+const CACHE_SHELL = "grahita-shell-v4"
+const CACHE_RUNTIME = "grahita-runtime-v4"
 const SHELL_ASSETS = [
   "/",
   "/login",
@@ -140,14 +140,17 @@ self.addEventListener("message", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close()
   const url = event.notification.data?.url || "/calendar"
+  const target = url.startsWith("http") ? url : new URL(url, self.location.origin).href
+
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
       for (const client of clients) {
         if ("focus" in client) {
+          client.navigate(target)
           return client.focus()
         }
       }
-      return self.clients.openWindow(url)
+      return self.clients.openWindow(target)
     })
   )
 })

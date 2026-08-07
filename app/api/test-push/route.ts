@@ -39,6 +39,16 @@ export async function POST() {
     let sentCount = 0
     const errors: string[] = []
 
+    const fermentation = await db.fermentation.findFirst({
+      where: { userId: session.user.id },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, name: true, type: true },
+    })
+
+    const fermentationLabel = fermentation
+      ? `${fermentation.type === "POC" ? "POC" : "Eco Enzym"} ${fermentation.name}`
+      : null
+
     for (const sub of subscriptions) {
       try {
         await webPush.sendNotification(
@@ -50,12 +60,21 @@ export async function POST() {
             },
           },
           JSON.stringify({
-            title: "Test Notifikasi Grahita",
-            body: "Notifikasi ini adalah uji coba. Push notification berfungsi dengan baik!",
+            title: fermentationLabel
+              ? `${fermentationLabel} — Notifikasi Uji Coba`
+              : "Test Notifikasi Grahita",
+            body: fermentationLabel
+              ? `Notifikasi ini adalah uji coba. Klik untuk membuka detail fermentasi "${fermentationLabel}".`
+              : "Notifikasi ini adalah uji coba. Push notification berfungsi dengan baik!",
             tag: `grahita-test-notification-${Date.now()}`,
             requireInteraction: false,
-            renotify: true,
-            url: "/calendar",
+            renotify: false,
+            url: fermentation
+              ? `/fermentation/${fermentation.id}`
+              : "/calendar",
+            data: fermentation
+              ? { fermentationId: fermentation.id }
+              : {},
           })
         )
         sentCount++

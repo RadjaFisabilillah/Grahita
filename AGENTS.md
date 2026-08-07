@@ -13,6 +13,8 @@ Mengikuti `DESIGN.md` dengan:
 
 ### Routing
 - `/login` — Email + password login
+- `/forgot-password` — Minta link reset password via email
+- `/reset-password?token=...` — Setel password baru
 - `/dashboard` — List fermentasi + progress
 - `/fermentation/[id]` — Detail, timeline, edit
 - `/calendar` — Kalender task + reminder
@@ -23,14 +25,22 @@ Mengikuti `DESIGN.md` dengan:
 - `Fermentation` — proses fermentasi (POC / ECO_ENZYM)
 - `Task` — tugas/jadwal per fermentasi
 - `Session` — Auth.js session
+- `PasswordResetToken` — token reset password (expire 15 menit)
 - `PushSubscription` — Web Push subscriptions
 
 ### API Routes
 - `POST /api/auth/[...nextauth]` — Auth.js handlers
+- `POST /api/auth/forgot-password` — Generate token reset + kirim email via Resend
+- `POST /api/auth/reset-password` — Validasi token + setel password baru
 - `GET/POST /api/fermentations` — CRUD fermentasi
 - `PATCH/DELETE /api/fermentations/[id]` — Update/delete
 - `PATCH /api/tasks/[id]` — Toggle task completion
 - `POST /api/subscribe` — Save push subscription
+
+### Email
+- Client: `lib/email.ts` (Resend SDK)
+- Template: `components/emails/reset-password-email.tsx` (React Email)
+- From default: `Grahita <onboarding@resend.dev>` (sandbox Resend)
 
 ### PWA
 - Manifest: `app/manifest.ts`
@@ -55,6 +65,8 @@ NEXTAUTH_URL=http://localhost:3000
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=...
 VAPID_PRIVATE_KEY=...
 VAPID_SUBJECT=mailto:...
+RESEND_API_KEY=...
+RESEND_FROM_EMAIL=Grahita <onboarding@resend.dev>
 ```
 
 ## Important Notes

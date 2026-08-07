@@ -11,13 +11,6 @@ import { Badge } from "@/components/ui/badge"
 import { Loader2, Eye, EyeOff, AlertCircle, CheckCircle2 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 
 interface LoginFormProps {
   expired?: boolean
@@ -30,7 +23,6 @@ export function LoginForm({ expired, registered, errorParam }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(errorParam || "")
   const [showPassword, setShowPassword] = useState(false)
-  const [showForgotModal, setShowForgotModal] = useState(false)
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -115,13 +107,12 @@ export function LoginForm({ expired, registered, errorParam }: LoginFormProps) {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password" className="font-headline text-xs uppercase tracking-wider">Password</Label>
-                <button
-                  type="button"
-                  onClick={() => setShowForgotModal(true)}
+                <Link
+                  href="/forgot-password"
                   className="font-body text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Lupa password?
-                </button>
+                </Link>
               </div>
               <div className="relative">
                 <Input
@@ -176,42 +167,6 @@ export function LoginForm({ expired, registered, errorParam }: LoginFormProps) {
           </div>
         </CardContent>
       </Card>
-
-      {/* Forgot Password Modal */}
-      <Dialog open={showForgotModal} onOpenChange={(open) => setShowForgotModal(open)}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Lupa Password?</DialogTitle>
-            <DialogDescription>
-              Hubungi admin untuk reset password akun Anda.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-2">
-            <div className="p-4 rounded-2xl bg-muted/50 text-center space-y-2">
-              <p className="font-body text-sm text-muted-foreground">
-                Kirim pesan WhatsApp ke admin dengan menyertakan email akun Anda.
-              </p>
-              <a
-                href="https://wa.me/62895635537407?text=Halo%20admin%2C%20saya%20lupa%20password%20akun%20Grahita%20saya.%20Email%3A%20"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl font-headline font-semibold text-sm bg-[#25D366] text-white shadow-level-1 hover:opacity-90 active:scale-95 transition-all w-full"
-              >
-                Hubungi Admin via WhatsApp
-              </a>
-            </div>
-
-            <Button
-              variant="ghost"
-              className="w-full font-body"
-              onClick={() => setShowForgotModal(false)}
-            >
-              Tutup
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   )
 }
