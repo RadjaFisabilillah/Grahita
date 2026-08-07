@@ -82,7 +82,7 @@ export function AdminShell({
         </aside>
 
         {/* Main content */}
-        <main className="flex-1 min-w-0 px-5 py-6">{children}</main>
+        <main className="flex-1 min-w-0 px-5 py-6 pb-24 md:pb-6">{children}</main>
       </div>
 
       {/* Mobile bottom tabs */}
