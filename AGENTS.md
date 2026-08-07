@@ -13,34 +13,35 @@ Mengikuti `DESIGN.md` dengan:
 
 ### Routing
 - `/login` — Email + password login
-- `/forgot-password` — Minta link reset password via email
-- `/reset-password?token=...` — Setel password baru
+- `/forgot-password` — Arahkan user menghubungi admin via WhatsApp
 - `/dashboard` — List fermentasi + progress
 - `/fermentation/[id]` — Detail, timeline, edit
 - `/calendar` — Kalender task + reminder
 - `/settings` — Tema, permission, notifikasi, logout
+- `/admin/users` — Kelola akun pengguna (khusus role `ADMIN`)
 
 ### Database (Prisma)
-- `User` — akun pengguna
+- `User` — akun pengguna (punya `role`: `USER` | `ADMIN`)
 - `Fermentation` — proses fermentasi (POC / ECO_ENZYM)
 - `Task` — tugas/jadwal per fermentasi
 - `Session` — Auth.js session
-- `PasswordResetToken` — token reset password (expire 15 menit)
 - `PushSubscription` — Web Push subscriptions
+
+### Role & Admin
+- Default role pengguna = `USER`. Super admin ditunjuk manual via seed/database.
+- Role disertakan di token/session (`session.user.role`) via `lib/auth.ts` + type augmentation `types/next-auth.d.ts`.
+- Helper guard: `lib/session.ts` — `isAdmin()`, `requireAdmin()`, `requireAdminApi()`.
+- Route `/admin/*` diproteksi oleh `requireAdmin()` di `app/(dashboard)/admin/layout.tsx`.
 
 ### API Routes
 - `POST /api/auth/[...nextauth]` — Auth.js handlers
-- `POST /api/auth/forgot-password` — Generate token reset + kirim email via Resend
-- `POST /api/auth/reset-password` — Validasi token + setel password baru
 - `GET/POST /api/fermentations` — CRUD fermentasi
 - `PATCH/DELETE /api/fermentations/[id]` — Update/delete
 - `PATCH /api/tasks/[id]` — Toggle task completion
 - `POST /api/subscribe` — Save push subscription
-
-### Email
-- Client: `lib/email.ts` (Resend SDK)
-- Template: `components/emails/reset-password-email.tsx` (React Email)
-- From default: `Grahita <onboarding@resend.dev>` (sandbox Resend)
+- `GET /api/admin/users` — List user (admin)
+- `DELETE /api/admin/users/[id]` — Hapus user (admin)
+- `POST /api/admin/users/[id]/reset-password` — Reset password user (admin)
 
 ### PWA
 - Manifest: `app/manifest.ts`
@@ -65,8 +66,6 @@ NEXTAUTH_URL=http://localhost:3000
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=...
 VAPID_PRIVATE_KEY=...
 VAPID_SUBJECT=mailto:...
-RESEND_API_KEY=...
-RESEND_FROM_EMAIL=Grahita <onboarding@resend.dev>
 ```
 
 ## Important Notes

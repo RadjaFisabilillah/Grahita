@@ -4,6 +4,17 @@ import bcrypt from "bcryptjs"
 async function seed() {
   const hashedPassword = await bcrypt.hash("password123", 12)
 
+  const admin = await db.user.upsert({
+    where: { email: "admin@grahita.app" },
+    update: {},
+    create: {
+      email: "admin@grahita.app",
+      password: hashedPassword,
+      name: "Admin Grahita",
+      role: "ADMIN",
+    },
+  })
+
   const user = await db.user.upsert({
     where: { email: "demo@grahita.app" },
     update: {},

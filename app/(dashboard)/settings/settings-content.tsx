@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { logoutAction } from "./logout-action"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -9,9 +10,13 @@ import { ThemeToggle } from "@/components/features/theme-toggle"
 import { WalkthroughModal } from "@/components/features/walkthrough-modal"
 import { PushSubscriptionToggle } from "@/components/features/push-subscription"
 import { PushTestButton } from "@/components/features/push-test-button"
-import { LogOut, Smartphone, BookOpen, ChevronRight } from "lucide-react"
+import { LogOut, Smartphone, BookOpen, ChevronRight, ShieldCheck } from "lucide-react"
 
-export function SettingsContent({ user }: { user: { name?: string | null; email: string } }) {
+export function SettingsContent({
+  user,
+}: {
+  user: { name?: string | null; email: string; role?: string }
+}) {
   const [walkthroughOpen, setWalkthroughOpen] = useState(false)
 
   return (
@@ -32,6 +37,17 @@ export function SettingsContent({ user }: { user: { name?: string | null; email:
               <p className="font-body text-xs text-muted-foreground">{user.email}</p>
             </div>
           </div>
+          {user.role === "ADMIN" && (
+            <>
+              <Separator />
+              <Link href="/admin/users">
+                <Button variant="outline" size="sm" className="w-full justify-start gap-2">
+                  <ShieldCheck className="h-4 w-4" />
+                  Kelola Pengguna
+                </Button>
+              </Link>
+            </>
+          )}
           <Separator />
           <form action={logoutAction}>
             <Button variant="destructive" size="sm" type="submit">

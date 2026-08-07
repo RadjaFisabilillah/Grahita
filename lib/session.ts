@@ -1,10 +1,13 @@
 import { auth } from "@/lib/auth"
 import type { Session } from "next-auth"
 
+export type Role = "USER" | "ADMIN"
+
 export interface SessionUser {
   id: string
   email: string
   name: string | null
+  role: Role
 }
 
 function assertSessionUser(session: Session | null): SessionUser {
@@ -43,4 +46,30 @@ export async function requireAuthApi(): Promise<{ user: SessionUser } | null> {
   } catch {
     return null
   }
+}
+
+export function isAdmin(user: { role?: string }): boolean {
+  return user.role === "ADMIN"
+}
+
+/**
+ * Server-side guard for admin pages. Redirects non-admin users to /dashboard.
+ */
+export async function requireAdmin(): Promise<{ user: SessionUser }> {
+  const { user } = await requireAuth()
+  if (!isAdmin(user)) {
+    const { redirect } = await import("next/navigation")
+    redirect("/dashboard")
+  }
+  return { user }
+}
+
+/**
+ * API guard for admin-only endpoints. Returns null if not authorized.
+ */
+export async function requireAdminApi(): Promise<{ user: SessionUser } | null> {
+  const result = await requireAuthApi()
+  if (!result) return null
+  if (!isAdmin(result.user)) return null
+  return result
 }
