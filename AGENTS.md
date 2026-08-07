@@ -18,7 +18,7 @@ Mengikuti `DESIGN.md` dengan:
 - `/fermentation/[id]` — Detail, timeline, edit
 - `/calendar` — Kalender task + reminder
 - `/settings` — Tema, permission, notifikasi, logout
-- `/admin/users` — Kelola akun pengguna (khusus role `ADMIN`)
+- `/admin` — Dashboard admin (Overview, Pengguna, Fermentasi, Tugas) khusus role `ADMIN`
 
 ### Database (Prisma)
 - `User` — akun pengguna (punya `role`: `USER` | `ADMIN`)
@@ -42,6 +42,11 @@ Mengikuti `DESIGN.md` dengan:
 - `GET /api/admin/users` — List user (admin)
 - `DELETE /api/admin/users/[id]` — Hapus user (admin)
 - `POST /api/admin/users/[id]/reset-password` — Reset password user (admin)
+- `GET /api/admin/stats` — Statistik ringkasan (admin)
+- `GET /api/admin/fermentations` — List semua fermentasi (admin)
+- `DELETE /api/admin/fermentations/[id]` — Hapus fermentasi (admin)
+- `GET /api/admin/tasks` — List semua tugas (admin)
+- `DELETE /api/admin/tasks/[id]` — Hapus tugas (admin)
 
 ### PWA
 - Manifest: `app/manifest.ts`

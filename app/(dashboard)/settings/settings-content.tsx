@@ -40,10 +40,10 @@ export function SettingsContent({
           {user.role === "ADMIN" && (
             <>
               <Separator />
-              <Link href="/admin/users">
+              <Link href="/admin">
                 <Button variant="outline" size="sm" className="w-full justify-start gap-2">
                   <ShieldCheck className="h-4 w-4" />
-                  Kelola Pengguna
+                  Dashboard Admin
                 </Button>
               </Link>
             </>

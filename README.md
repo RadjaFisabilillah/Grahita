@@ -6,6 +6,7 @@ PWA monitoring proses pembuatan **POC (Pupuk Organik Cair)** dan **Eco Enzym** u
 
 - **Autentikasi** — Login dengan email & password (Auth.js)
 - **Dashboard** — Pantau progress fermentasi real-time dengan progress ring
+- **Admin Panel** — Dashboard admin terpisah (Overview, Pengguna, Fermentasi, Tugas) khusus role ADMIN
 - **Kalender** — Lihat jadwal tugas per fermentasi per tanggal
 - **Detail Fermentasi** — Expand card untuk detail lengkap, update status, catatan
 - **PWA** — Installable, offline-ready, push notifications
